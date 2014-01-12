@@ -4,6 +4,7 @@ from django.db import models
 from django.contrib.auth.models import BaseUserManager, AbstractUser
 from django.utils import timezone
 import pickle
+from jsonfield import JSONField
 
 materia_dificultad = (
 	('e', 'Easy'),
@@ -11,36 +12,33 @@ materia_dificultad = (
 	('h', 'Hard'),
 )
 
-class Materia(models.Model):
-    nombre = models.CharField(max_length=50)
-    plan = models.CharField(max_length=10)
-    anio = models.CharField(max_length=2)
-    dificultad = models.CharField(max_length=2, choices=materia_dificultad, null=True)
+class MateriaInfo(models.Model):
 
-    def __unicode__(self):
-    	return self.nombre
+	DIFICULTADES = (
+		(0, u'None'),
+		(1, u'Fácil'),
+		(2, u'Medio'),
+		(3, u'Difícil'),
+	)
 
-class Carrera(models.Model):
-	nombre = models.CharField(max_length=128)
+	nombre = models.CharField(max_length=256)
+	plan = models.CharField(max_length=4)
+	anio = models.IntegerField()
+	dificultad = models.IntegerField(choices=DIFICULTADES, null=True, blank=True)
+	dificultad_calificaciones_cant = models.IntegerField()
+	dificultad_calificaciones_sum = models.IntegerField()
+
+	def agregar_calificacion(self, calificacion):
+		if calificacion in [1, 2, 3]:
+			dificultad_calificaciones_sum += calificacion
+			dificultad_calificaciones_cant += 1
+			self.dificultad = dificultad_calificaciones_sum / dificultad_calificaciones_cant
+			return self.dificultad
+		else:
+			raise ValueError(u'Calificación no válida.')
 
 	def __unicode__(self):
 		return self.nombre
-
-class EstadoMateria(models.Model):
-	materia = models.ForeignKey(Materia)
-	estado = models.CharField(max_length=32)
-	aula = models.CharField(max_length=64, blank=True, null=True)
-	nota = models.IntegerField(blank=True, null=True)
-	tomo = models.IntegerField(blank=True, null=True)
-	folio = models.IntegerField(blank=True, null=True)
-	comision = models.CharField(max_length=24)
-
-	def __unicode__(self):
-		return u'%s: %s' % (self.materia.nombre, self.estado)
-
-	class Meta:
-		verbose_name = u'estado de materia'
-		verbose_name_plural = u'estados de materia'
 
 class AlumnoManager(BaseUserManager):
 
@@ -82,20 +80,14 @@ class Session(models.Model):
 class Alumno(AbstractUser):
 
 	fr = models.CharField(max_length=5)
-	carrera = models.ForeignKey(Carrera, blank=True, null=True)
 	legajo = models.CharField(max_length=30)
 	last_activity = models.DateTimeField(default=timezone.now())
 	session = models.ForeignKey(Session, null=True)
-	materias = models.ManyToManyField(EstadoMateria, blank=True, null=True)
+	materias = models.ManyToManyField(MateriaInfo ,through='Materia', blank=True, null=True)
 
 	objects = AlumnoManager()
 
 	REQUIRED_FIELDS = ['fr', 'legajo', 'email']
-
-	def is_ready_for_request(self):
-		if (timezone.now() - self.last_activity) > timedelta(seconds=SESSION_DURATION):
-			return False
-		return True
 
 	def actualizar_materias(self, materias_dict):
 		for mat in materias_dict:
@@ -140,3 +132,14 @@ class Alumno(AbstractUser):
 		r = self.get_materia_percent('regular')
 		c = self.get_materia_percent('cursa')
 		return str(int(a + (r / 4) + (c / 8)))
+
+class Materia(models.Model):
+    materia_info = models.ForeignKey(MateriaInfo)
+    alumno = models.ForeignKey(Alumno)
+    estado = models.CharField(max_length=32)
+
+    # Incluye aula, nota, tomo, folio, comision (según corresponda)
+    data = JSONField()
+
+    def __unicode__(self):
+        return u'%s: %s' % (self.materia_info.nombre, self.estado)

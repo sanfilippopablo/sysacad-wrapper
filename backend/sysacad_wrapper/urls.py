@@ -4,7 +4,7 @@ from website.auth import AuthenticationForm
 from django.contrib.auth.decorators import login_required
 import website.views, website.ajax_views
 
-from website.api import cached_api, actual_api
+from website.api import cached_api
 
 from django.contrib import admin
 admin.autodiscover()

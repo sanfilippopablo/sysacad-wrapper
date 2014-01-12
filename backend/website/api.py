@@ -5,22 +5,9 @@ from tastypie.http import HttpUnauthorized, HttpForbidden
 from django.conf.urls import url
 from tastypie.utils import trailing_slash
 from tastypie import fields
-from website.models import Materia, Carrera, EstadoMateria, Alumno
-
-
-
-class MateriaResource(ModelResource):
-    class Meta:
-        queryset = Materia.objects.all()
-        resource_name = 'materias'
-
-class EstadoMateriaResource(ModelResource):
-    class Meta:
-        queryset = EstadoMateria.objects.all()
-        resource_name = 'estadosmateria'
+from website.models import MateriaInfo, Materia, Alumno
 
 class AlumnoResource(ModelResource):
-    materias = fields.ToManyField('website.api.EstadoMateriaResource', 'materias')
 
     class Meta:
         queryset = Alumno.objects.all()
@@ -38,8 +25,6 @@ class AlumnoResource(ModelResource):
 
     def login(self, request, **kwargs):
         self.method_check(request, allowed=['post'])
-
-        print request.body, "asdadawd"
 
         data = self.deserialize(request, request.body, format=request.META.get('CONTENT_TYPE', 'application/json'))
 
@@ -75,10 +60,4 @@ class AlumnoResource(ModelResource):
             return self.create_response(request, { 'success': False }, HttpUnauthorized)
 
 cached_api = Api(api_name='cached')
-cached_api.register(MateriaResource())
 cached_api.register(AlumnoResource())
-cached_api.register(EstadoMateriaResource())
-
-actual_api = Api(api_name='actual')
-actual_api.register(MateriaResource())
-actual_api.register(AlumnoResource())
