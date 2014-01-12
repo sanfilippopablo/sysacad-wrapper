@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+
+{% block 'head_title' %}Materias{% endblock %}
+{% block 'content_container_title' %}Materias{% endblock %}
+
+{% block 'content_container' %}
+
+<div class="filter-box">
+	<span class="filter-text">
+		Filtrar:
+	</span>
+
+	<div class="btn-group" data-toggle="buttons">
+	  <label class="btn btn-default">
+	    <input type="checkbox" name="options" id="option1"> Aprobadas
+	  </label>
+	  <label class="btn btn-default">
+	    <input type="checkbox" name="options" id="option2"> Regularizadas
+	  </label>
+	  <label class="btn btn-default">
+	    <input type="checkbox" name="options" id="option3"> En curso
+	  </label>
+	</div>
+</div>
+
+<div class="panel-group" id="materias-list">
+	{% for materia in materias %}
+	<div class="panel panel-default">
+		<div class="panel-heading">
+			<h4 class="panel-title">
+				<a href="#materia-{{ forloop.counter }}" data-toggle="collapse" data-parent="#materias-list" class="materia-name">
+					{{ materia.materia.nombre }}
+					{% if materia.estado == 'aprobada' %}
+					<span class="text-success pull-right">Aprobada</span>
+					{% elif materia.estado == 'regular' %}
+					<span class="text-primary pull-right">Regularizada</span>
+					{% elif materia.estado == 'cursa' %}
+					<span class="text-info pull-right">En curso</span>
+					{% else %}
+					<span class="text-muted pull-right">No inscripto</span>
+					{% endif %}
+				</a>
+			</h4>
+		</div>
+		<div class="panel-collapse collapse" id="materia-{{ forloop.counter }}">
+			<div class="panel-body">
+				{% if materia.estado == 'regular' %}
+					<button class="btn btn-success">Inscribirse a exámen</button>
+				{% elif materia.estado == 'aprobada' %}
+				<div class="row">
+					<div class="col-lg-1" style="text-align:center">
+						<div class="materia-nota-label">Nota</div>
+						<div class="materia-nota">
+							{{ materia.nota }}
+						</div>
+					</div>
+					<div class="col-lg-2">
+						<p><span style="font-weight:300">Tomo</span> {{ materia.tomo }}.</p>
+						<p><span style="font-weight:300">Folio</span> {{materia.folio }}.</p>
+					</div>
+				</div>
+				{% elif materia.estado == 'cursa' %}
+				<div>
+				Aula: {{ materia.aula }} Comisión {{ materia.comision }}
+				</div>
+				{% elif materia.estado == 'no_inscripto' %}
+					<button class="btn btn-primary">Inscribirse a cursado</button>
+				{% endif %}
+				Datos para materias en cualquier estado
+			</div>
+		</div>
+	</div>
+	{% endfor %}
+</div>
+
+{% endblock 'content_container' %}
+
+{% block 'css' %}
+	{{ block.super }}
+	<link rel="stylesheet" href="{% static 'css/materias.css' %}">
+{% endblock 'css' %}

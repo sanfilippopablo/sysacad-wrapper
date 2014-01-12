@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+
+{% block 'head_title' %}Dashboard{% endblock %}
+{% block 'content_container_title' %}Dashboard{% endblock %}
+
+{% block 'content_container' %}
+
+{% if estado == 'new_user' %}
+<div class="alert alert-info actualizando-alert active">
+    <img src="{% static 'img/ajax-loader.gif' %}">
+    Obteniendo tu información, aguantá un toque...
+</div>
+
+{% else %}
+<div class="alert alert-info actualizando-alert active">
+    <img src="{% static 'img/ajax-loader.gif' %}">
+    Datos antiguos, actualizando los nuevos datos...
+</div>
+{% include 'dashboard_data.html' %}
+
+{% endif %}
+
+{% endblock 'content_container' %}
+
+{% block 'css' %}
+{{ block.super }}
+<link rel="stylesheet" type="text/css" href="{% static 'css/dashboard.css' %}">
+{% endblock 'css' %}
+
+{% block 'js' %}
+{{ block.super }}
+<script type="text/javascript" src="{% static 'js/dashboard.js' %}"></script>
+{% endblock 'js' %}

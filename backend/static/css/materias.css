@@ -1,0 +1,26 @@
+.filter-box {
+	margin: 8px;
+	text-align: right;
+}
+
+.filter-box .filter-text {
+	font-size: 1.4em;
+	font-weight: 300;
+	vertical-align: middle;
+	margin-right: 8px;
+}
+
+
+.materia-name {
+	font-weight: 300;
+}
+
+.materia-nota {
+	font-size: 4em;
+	font-weight: 300;
+	line-height: 0.8;
+}
+
+.materia-nota-label {
+	font-weight: 300;
+}

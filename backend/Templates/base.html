@@ -1,0 +1,110 @@
+{% load staticfiles %}
+{% load crispy_forms_tags %}
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>{% block 'head_title' %}{% endblock %} - Sysacad Wrapper</title>
+    <link rel="icon" href="{% static 'img/favicon.ico' %}" type="image/x-icon" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    {% block 'css' %}
+    <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href='http://fonts.googleapis.com/css?family=Roboto:400,300' rel='stylesheet' type='text/css'>
+    <link href="{% static 'css/base.css' %}" rel="stylesheet">
+    {% endblock 'css' %}
+
+  </head>
+  <body>
+
+	{% block 'navbar' %}
+	<div class="navbar navbar-fixed-top navbar-default" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="{% url 'dashboard' %}"><strong>Sysacad Wrapper</strong></a>
+        </div>
+        <div class="collapse navbar-collapse">
+          <ul class="nav navbar-nav pull-right">
+          {% if user.is_authenticated %}
+          <li><a href="">Legajo {{ user.legajo }}</a></li>
+            <li class="dropdown">
+		        <a href="#" class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-user"></span>
+              <span class="user-full-name">
+              {% if user.get_full_name %}
+                {{ user.get_full_name }}
+              {% else %}
+                <img src="{% static 'img/ajax-loader.gif' %}"> Cargando datos...
+              {% endif %}
+              </span>
+            <b class="caret"></b></a>
+		        <ul class="dropdown-menu">
+		          <li><a href="{% url 'ajustes-personales' %}">Ajustes Personales</a></li>
+		          <li class="divider"></li>
+		          <li><a href="#">Salir</a></li>
+		        </ul>
+		      </li>
+		      {% endif %}
+          </ul>
+        </div><!-- /.nav-collapse -->
+      </div><!-- /.container -->
+    </div><!-- /.navbar -->
+    {% endblock 'navbar' %}
+
+
+    <div class="container">
+    	{% block 'main_container' %}
+      <div class="row row-offcanvas row-offcanvas-left">
+
+      	{% block 'off_canvas_menu' %}
+		<div class="col-xs-6 col-sm-3 sidebar-offcanvas" id="sidebar" role="navigation">
+          <div class="list-group">
+            {% url 'dashboard' as url %}
+            <a class="list-group-item {% if request.path == url %} active {% endif %}" href="{{ url }}">Dashboard</a>
+            {% url 'materias' as url %}
+            <a class="list-group-item {% if request.path == url %} active {% endif %}" href="{{ url }}">Materias</a>
+          </div>
+        </div><!--/span-->
+        {% endblock 'off_canvas_menu' %}
+
+
+        <div class="col-xs-12 col-sm-9">
+          <div class="page-header">
+            <button type="button" class="btn btn-primary visible-xs" data-toggle="offcanvas" id="menu-button">Menú</button>
+            <h1 style="display:inline !important">{% block 'content_container_title' %}{% endblock %}</h1>
+            <button id="notificaciones" class="btn btn-default pull-right">0</button>
+          </div>
+          <div class="row" id="content-container">
+          	{% block 'content_container' %}
+          	{% endblock 'content_container' %}
+          </div><!--/row-->
+        </div><!--/span-->
+      </div><!--/row-->
+
+      {% endblock 'main_container' %}
+    </div><!--/.container-->
+    <div class="container">
+    	<hr>
+	    <footer>
+	        <p> A nice footer with links to FAQ, About, etc.</p>
+          <p>Podés reportar problemas en la sección <a href="https://github.com/giamfreeg/sysacad-wrapper/issues">Issues</a> del <a href="https://github.com/giamfreeg/sysacad-wrapper">repo en GitHub</a>.</p>
+          <p>También podés chequear el código y enviar un pull request, if you dare.</p>
+	    </footer>
+    </div>
+
+    {% block 'password-required-modal' %}
+      {% crispy renew_sysacad_session_form %}
+    {% endblock 'password-required-modal' %}
+
+    {% block 'js' %}
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+    <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.2/js/bootstrap.min.js"></script>
+    <script src="{% static 'js/main.js' %}"></script>
+    {% endblock 'js' %}
+  </body>
+</html>
