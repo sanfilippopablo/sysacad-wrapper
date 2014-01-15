@@ -20,7 +20,7 @@ urlpatterns = patterns('',
     url(r'^api/alumnos/(?P<pk>\d+)/$', api_views.AlumnosDetail.as_view(), name='alumnos-detail'),
 
     # EstadosMateria
-#    url(r'^api/alumnos/(?P<pk>\d+)/materias/$', api_views.EstadosMateriaList.as_view(), name='estadosmateria-list'),
+    url(r'^api/alumnos/(?P<alumno_pk>\d+)/materias/$', api_views.EstadosMateriaList.as_view(), name='estadosmateria-list'),
 #    url(r'^api/alumnos/(?P<alumno_pk>\d+)/materias/(?P<estadomateria_pk>\d+)/$', api_views.AlumnosList.as_view(), name='estadosmateria-detail'),
 
     # Materias

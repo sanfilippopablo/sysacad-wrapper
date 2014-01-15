@@ -5,13 +5,20 @@ from rest_framework.serializers import ModelSerializer
 from rest_framework.response import Response
 from website.auth import SysacadSession
 
-from website.models import Alumno
+from website.models import Alumno, EstadoMateria
 
 class AlumnoDetailPermission(BasePermission):
     def has_object_permission(self, request, view, obj):
         if request.user.is_superuser:
             return True
         if request.user.pk == obj.pk:
+            return True
+        return False
+
+class EstadoMateriaPermission(BasePermission):
+    def has_permission(self, request, view):
+        alumno_pk = view.kwargs['alumno_pk']
+        if alumno_pk == request.user.pk:
             return True
         return False
 
@@ -77,3 +84,16 @@ class AlumnosDetail(generics.RetrieveUpdateAPIView):
     model = Alumno
     serializer_class = AlumnoSerializer
     permission_classes = (AlumnoDetailPermission,)
+
+class EstadosMateriaList(generics.ListAPIView):
+
+    def get_queryset(self):
+        alumno_pk = self.kwargs['alumno_pk']
+        queryset = Alumno.objects.get(pk=alumno_pk).materias.all()
+
+        if self.request.QUERY_PARAMS.get('cached', 'true') == 'false':
+            # TODO: Actualizar datos de materias
+
+        return queryset
+
+    model = EstadoMateria
