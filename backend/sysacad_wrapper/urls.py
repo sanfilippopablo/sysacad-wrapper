@@ -3,26 +3,29 @@ from django.views.generic.base import TemplateView
 from website.auth import AuthenticationForm
 from django.contrib.auth.decorators import login_required
 import website.views, website.ajax_views
-
-from website.api import cached_api
+from website import api_views
+from rest_framework.urlpatterns import format_suffix_patterns
 
 from django.contrib import admin
 admin.autodiscover()
 
 urlpatterns = patterns('',
-    # Auth views
-    url(r'^login/$', 'django.contrib.auth.views.login', {'template_name': 'login.html', 'authentication_form': AuthenticationForm}, name='login'),
-    url(r'^admin/', include(admin.site.urls), name='admin'),
+    url(r'^admin/', include(admin.site.urls)),
 
-    # Normal views
-    url(r'^$', 'website.views.dashboard', name='dashboard'),
-    url(r'^ajustes-personales/$', login_required(website.views.AjustesPersonalesView.as_view()), name='ajustes-personales'),
-    url(r'^materias/$', website.views.materias, name='materias'),
+    # Auth
+    url(r'^api/alumnos/login/$', api_views.Login.as_view(), name='login'),
+    url(r'^api/alumnos/logout/$', api_views.Logout.as_view(), name='logout'),
 
-    # Ajax views
-    url(r'^ajax/dashboard_data/$', website.ajax_views.dashboard_data, name='ajax-dashboard-data'), 
-    url(r'^ajax/renew-sysacad-session/$', website.ajax_views.renew_sysacad_session, name='ajax-renew-sysacad-session'),
+    # Alumnos
+    url(r'^api/alumnos/(?P<pk>\d+)/$', api_views.AlumnosDetail.as_view(), name='alumnos-detail'),
 
-    # API
-    url(r'^api/', include(cached_api.urls)),
+    # EstadosMateria
+#    url(r'^api/alumnos/(?P<pk>\d+)/materias/$', api_views.EstadosMateriaList.as_view(), name='estadosmateria-list'),
+#    url(r'^api/alumnos/(?P<alumno_pk>\d+)/materias/(?P<estadomateria_pk>\d+)/$', api_views.AlumnosList.as_view(), name='estadosmateria-detail'),
+
+    # Materias
+#    url(r'^api/materias/$', api_views.MateriasList.as_view(), name='materias-list'),
+#    url(r'^api/materias/(?P<pk>\d+)/$', api_views.MateriasDetail.as_view(), name='materias-detail'),
 )
+
+urlpatterns = format_suffix_patterns(urlpatterns)

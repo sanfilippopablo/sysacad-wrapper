@@ -35,6 +35,7 @@ INSTALLED_APPS = (
     'crispy_forms',
     'website',
     'south',
+    'rest_framework',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -122,6 +123,12 @@ TEMPLATE_CONTEXT_PROCESSORS = ("django.contrib.auth.context_processors.auth",
     "django.contrib.messages.context_processors.messages",
     "website.context_processors.renew_sysacad_session_form"
 )
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.SessionAuthentication',
+    )
+}
 
 try:
     from local_settings import *

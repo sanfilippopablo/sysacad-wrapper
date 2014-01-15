@@ -7,38 +7,38 @@ import pickle
 from jsonfield import JSONField
 
 materia_dificultad = (
-	('e', 'Easy'),
-	('m', 'Medium'),
-	('h', 'Hard'),
+    ('e', 'Easy'),
+    ('m', 'Medium'),
+    ('h', 'Hard'),
 )
 
-class MateriaInfo(models.Model):
+class Materia(models.Model):
 
-	DIFICULTADES = (
-		(0, u'None'),
-		(1, u'Fácil'),
-		(2, u'Medio'),
-		(3, u'Difícil'),
-	)
+    DIFICULTADES = (
+        (0, u'None'),
+        (1, u'Fácil'),
+        (2, u'Medio'),
+        (3, u'Difícil'),
+    )
 
-	nombre = models.CharField(max_length=256)
-	plan = models.CharField(max_length=4)
-	anio = models.IntegerField()
-	dificultad = models.IntegerField(choices=DIFICULTADES, null=True, blank=True)
-	dificultad_calificaciones_cant = models.IntegerField()
-	dificultad_calificaciones_sum = models.IntegerField()
+    nombre = models.CharField(max_length=256)
+    plan = models.CharField(max_length=4)
+    anio = models.IntegerField()
+    dificultad = models.IntegerField(choices=DIFICULTADES, null=True, blank=True)
+    dificultad_calificaciones_cant = models.IntegerField()
+    dificultad_calificaciones_sum = models.IntegerField()
 
-	def agregar_calificacion(self, calificacion):
-		if calificacion in [1, 2, 3]:
-			dificultad_calificaciones_sum += calificacion
-			dificultad_calificaciones_cant += 1
-			self.dificultad = dificultad_calificaciones_sum / dificultad_calificaciones_cant
-			return self.dificultad
-		else:
-			raise ValueError(u'Calificación no válida.')
+    def agregar_calificacion(self, calificacion):
+        if calificacion in [1, 2, 3]:
+            dificultad_calificaciones_sum += calificacion
+            dificultad_calificaciones_cant += 1
+            self.dificultad = dificultad_calificaciones_sum / dificultad_calificaciones_cant
+            return self.dificultad
+        else:
+            raise ValueError(u'Calificación no válida.')
 
-	def __unicode__(self):
-		return self.nombre
+    def __unicode__(self):
+        return self.nombre
 
 class AlumnoManager(BaseUserManager):
 
@@ -68,78 +68,77 @@ class AlumnoManager(BaseUserManager):
 
 
 class Session(models.Model):
-	session = models.TextField(null=True)
-	last_access = models.DateTimeField(default=timezone.now())
+    session = models.TextField(null=True)
+    last_access = models.DateTimeField(default=timezone.now())
 
-	def set_session(self, session):
-		self.session = pickle.dumps(session)
+    def set_session(self, session):
+        self.session = pickle.dumps(session)
 
-	def get_session(self):
-		return pickle.loads(self.session)
+    def get_session(self):
+        return pickle.loads(self.session)
 
 class Alumno(AbstractUser):
 
-	fr = models.CharField(max_length=5)
-	legajo = models.CharField(max_length=30)
-	last_activity = models.DateTimeField(default=timezone.now())
-	session = models.ForeignKey(Session, null=True)
-	materias = models.ManyToManyField(MateriaInfo ,through='Materia', blank=True, null=True)
+    fr = models.CharField(max_length=5)
+    legajo = models.CharField(max_length=30)
+    last_activity = models.DateTimeField(default=timezone.now())
+    session = models.ForeignKey(Session, null=True)
 
-	objects = AlumnoManager()
+    objects = AlumnoManager()
 
-	REQUIRED_FIELDS = ['fr', 'legajo', 'email']
+    REQUIRED_FIELDS = ['fr', 'legajo', 'email']
 
-	def actualizar_materias(self, materias_dict):
-		for mat in materias_dict:
-			# Actualizar la tabla materias (esto se hace la primera vez)
+    def actualizar_materias(self, materias_dict):
+        for mat in materias_dict:
+            # Actualizar la tabla materias (esto se hace la primera vez)
 
-			# Ignorar año materias de ingreso.
-			if int(mat['anio']) == 0:
-				continue
+            # Ignorar año materias de ingreso.
+            if int(mat['anio']) == 0:
+                continue
 
-			try:
-				materia_obj = Materia.objects.get(nombre=mat['nombre'])
-			except Materia.DoesNotExist:
-				materia_obj = Materia.objects.create(
-					nombre = mat['nombre'],
-					plan = mat['plan'],
-					anio = mat['anio']
-				)
+            try:
+                materia_obj = Materia.objects.get(nombre=mat['nombre'])
+            except Materia.DoesNotExist:
+                materia_obj = Materia.objects.create(
+                    nombre = mat['nombre'],
+                    plan = mat['plan'],
+                    anio = mat['anio']
+                )
 
-			# Actualizar materias de alumno.
-			# Acá estoy seteando todo otra vez. Pero hay que verificar, no setear todo otra vez.
-			# Así si detectamos un cambio mandamos la Notification.
-			al_mat = self.materias.get_or_create(materia=materia_obj)[0]
-			if mat['estado']['estado'] == 'aprobada':
-				al_mat.estado = 'aprobada'
-				al_mat.nota = mat['estado']['nota']
-				al_mat.tomo = mat['estado']['tomo']
-				al_mat.folio = mat['estado']['folio']
-			elif mat['estado']['estado'] == 'cursa':
-				al_mat.estado = 'cursa'
-				al_mat.aula = mat['estado']['aula']
-				al_mat.comision = mat['estado']['comision']
-			elif mat['estado']['estado'] == 'regular':
-				al_mat.estado = 'regular'
-			al_mat.save()
-		return self.materias
+            # Actualizar materias de alumno.
+            # Acá estoy seteando todo otra vez. Pero hay que verificar, no setear todo otra vez.
+            # Así si detectamos un cambio mandamos la Notification.
+            al_mat = self.materias.get_or_create(materia=materia_obj)[0]
+            if mat['estado']['estado'] == 'aprobada':
+                al_mat.estado = 'aprobada'
+                al_mat.nota = mat['estado']['nota']
+                al_mat.tomo = mat['estado']['tomo']
+                al_mat.folio = mat['estado']['folio']
+            elif mat['estado']['estado'] == 'cursa':
+                al_mat.estado = 'cursa'
+                al_mat.aula = mat['estado']['aula']
+                al_mat.comision = mat['estado']['comision']
+            elif mat['estado']['estado'] == 'regular':
+                al_mat.estado = 'regular'
+            al_mat.save()
+        return self.materias
 
-	def get_materia_percent(self, estado):
-		return int(round((self.materias.filter(estado=estado).count() / self.materias.count()) * 100))
+    def get_materia_percent(self, estado):
+        return int(round((self.materias.filter(estado=estado).count() / self.materias.count()) * 100))
 
-	def get_carrera_progress(self):
-		a = self.get_materia_percent('aprobada')
-		r = self.get_materia_percent('regular')
-		c = self.get_materia_percent('cursa')
-		return str(int(a + (r / 4) + (c / 8)))
+    def get_carrera_progress(self):
+        a = self.get_materia_percent('aprobada')
+        r = self.get_materia_percent('regular')
+        c = self.get_materia_percent('cursa')
+        return str(int(a + (r / 4) + (c / 8)))
 
-class Materia(models.Model):
-    materia_info = models.ForeignKey(MateriaInfo)
-    alumno = models.ForeignKey(Alumno)
+class EstadoMateria(models.Model):
+    alumno = models.ForeignKey(Alumno, related_name='materias')
+    info = models.ForeignKey(Materia)
     estado = models.CharField(max_length=32)
 
     # Incluye aula, nota, tomo, folio, comision (según corresponda)
-    data = JSONField()
+    data =JSONField()
 
     def __unicode__(self):
         return u'%s: %s' % (self.materia_info.nombre, self.estado)
