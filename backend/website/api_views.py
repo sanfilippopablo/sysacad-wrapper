@@ -5,7 +5,7 @@ from rest_framework.serializers import ModelSerializer
 from rest_framework.response import Response
 from website.auth import SysacadSession
 
-from website.models import Alumno, EstadoMateria
+from website.models import Alumno, EstadoMateria, Materia
 
 class AlumnoDetailPermission(BasePermission):
     def has_object_permission(self, request, view, obj):
@@ -28,7 +28,7 @@ class AlumnoSerializer(ModelSerializer):
         model = Alumno
         fields = ('id', 'first_name', 'last_name', 'fr', 'legajo', 'email')
         read_only_fields = ('id', 'first_name', 'last_name', 'fr', 'legajo')
-        write_only_fields = ('password', 'old_password')
+        write_only_fields = ('password',)
 
     def restore_object(self, attrs, instance=None):
         assert instance is not None, 'Solo updates.'
@@ -87,13 +87,58 @@ class AlumnosDetail(generics.RetrieveUpdateAPIView):
 
 class EstadosMateriaList(generics.ListAPIView):
 
+    depth = 1
+
     def get_queryset(self):
         alumno_pk = self.kwargs['alumno_pk']
-        queryset = Alumno.objects.get(pk=alumno_pk).materias.all()
+        alumno = Alumno.objects.get(pk=alumno_pk)
 
         if self.request.QUERY_PARAMS.get('cached', 'true') == 'false':
             # TODO: Actualizar datos de materias
+            sysacad = SysacadSession(alumno=alumno)
+            try:
+                materias = sysacad.estado_academico_data()['materias']
+            except SysacadSession.AuthenticationError:
+                raise exceptions.NotAuthenticated
+            sysacad.close()
 
-        return queryset
+            for materia in materias:
+                if int(materia['anio']) == 0:
+                    continue
+
+                try:
+                    materia_obj = Materia.objects.get(nombre=materia['nombre'])
+                except Materia.DoesNotExist:
+                    materia_obj = Materia.objects.create(
+                        nombre = materia['nombre'],
+                        plan = materia['plan'],
+                        anio = materia['anio']
+                    )
+
+                estadomateria = alumno.materias.get_or_create(info=materia_obj)[0]
+                if materia['estado']['estado'] == 'aprobada':
+                    estadomateria.estado = 'aprobada'
+                    estadomateria.data = {
+                        'nota': materia['estado']['nota'],
+                        'tomo': materia['estado']['tomo'],
+                        'folio': materia['estado']['folio'],
+                    }
+
+                elif materia['estado']['estado'] == 'cursa':
+                    estadomateria.estado = 'cursa'
+                    estadomateria.data = {
+                        'aula': materia['estado']['aula'],
+                        'comision': materia['estado']['comision']
+                    }
+
+                elif materia['estado']['estado'] == 'regular':
+                    estadomateria.estado = 'regular'
+
+                else:
+                    estadomateria.estado = 'no_inscripto'
+
+                estadomateria.save()
+
+        return alumno.materias.all()
 
     model = EstadoMateria

@@ -25,8 +25,8 @@ class Materia(models.Model):
     plan = models.CharField(max_length=4)
     anio = models.IntegerField()
     dificultad = models.IntegerField(choices=DIFICULTADES, null=True, blank=True)
-    dificultad_calificaciones_cant = models.IntegerField()
-    dificultad_calificaciones_sum = models.IntegerField()
+    dificultad_calificaciones_cant = models.IntegerField(null=True, blank=True)
+    dificultad_calificaciones_sum = models.IntegerField(null=True, blank=True)
 
     def agregar_calificacion(self, calificacion):
         if calificacion in [1, 2, 3]:
